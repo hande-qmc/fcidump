@@ -99,6 +99,60 @@ void write_eigv_to_disk(FILE* intdump, Dimension frzcpi, Dimension active_mopi, 
     }
 }
 
+void write_oei_prop_to_disk(FILE* intdump, boost::shared_ptr<Wavefunction> wfn, SharedMatrix prop_ints, double ints_tolerance, orb_indx indx, double *frz_contrib) {
+
+    double** scf = wfn->Ca()->to_block_matrix(); // TODO: UHF
+    int nso = wfn->nso();
+    int nmo = wfn->nmo();
+    Dimension frzcpi      = wfn->frzcpi();
+    Dimension active_mopi = wfn->nmopi() - frzcpi - wfn->frzvpi();
+    int nirrep = wfn->nirrep();
+
+    double **TMP1 = prop_ints->to_block_matrix();
+    double **TMP2 = block_matrix(nso,nso);
+
+    C_DGEMM('n','n',nso,nmo,nso,1,TMP1[0],nso,scf[0],nmo,0,TMP2[0],nso);
+    C_DGEMM('t','n',nmo,nmo,nso,1,scf[0],nmo,TMP2[0],nso,0,TMP1[0],nmo);
+    // TMP1 now holds the dipole integrals in the MO basis, ordered 1->nmo (in symmetry blocks).
+    // We just want to print out the active orbitals...
+    // Can't just loop over the two indices as we only know the
+    // active orbitals per irrep.  Instead, loop over everything
+    // and just print out non-zero integrals (bit slower as we
+    // don't use symmetry, but this isn't a hotspot...)
+    int ioff1 = 0;
+    int nfrz1 = 0;
+    for (int h1=0; h1<nirrep; ++h1) {
+        nfrz1 += frzcpi[h1];
+        int ioff2 = ioff1;
+        int nfrz2 = nfrz1;
+        for (int h2=h1; h2<nirrep; ++h2) {
+            for (int m1=frzcpi[h1]; m1<frzcpi[h1]+active_mopi[h1]; ++m1) {
+                int m2_init = h1 == h2 ? m1 : frzcpi[h2];
+                for (int m2=m2_init; m2<frzcpi[h2]+active_mopi[h2]; ++m2) {
+                    int iorb1 = m1+ioff1;
+                    int iorb2 = m2+ioff2;
+                    double intgrl = TMP1[iorb1][iorb2];
+                    if (fabs(intgrl) > ints_tolerance) fprintf(intdump, "%29.20E%4d%4d\n", intgrl, indx(iorb1-nfrz1), indx(iorb2-nfrz2));
+                }
+            }
+            nfrz2 += frzcpi[h2];
+            ioff2 += prop_ints->rowdim(h2);
+        }
+        ioff1 += prop_ints->rowdim(h1);
+    }
+    // The contribution of the frozen core orbitals to a one-body
+    // expectation value is just \sum_i <i|O_1|i>.
+    *frz_contrib = 0.0;
+    ioff1 = 0;
+    for (int h=0; h<nirrep; ++h) {
+        for (int m=0; m<frzcpi[h]; ++m) {
+            int iorb = m+ioff1;
+            *frz_contrib += 2*TMP1[iorb][iorb]; // 2* for RHF.
+        }
+        ioff1 += prop_ints->rowdim(h);
+    }
+}
+
 extern "C" int
 read_options(std::string name, Options &options)
 {
@@ -228,58 +282,13 @@ fcidump(Options &options)
             std::string fname[] = {"DIPOLES_X", "DIPOLES_Y", "DIPOLES_Z"};
             MintsHelper mints;
             std::vector<SharedMatrix> dipole = mints.so_dipole();
-            int nso = wfn->nso();
-            int nmo = wfn->nmo();
-            fprintf(outfile, "NMO %d", nmo);
-            fprintf(outfile, "NSO %d", nso);
-            double** scf = wfn->Ca()->to_block_matrix();
             FILE *dipoledump;
-            double **TMP2 = block_matrix(nso,nso);
+            double frz_contrib;
             Vector3 origin = Vector3( 0, 0, 0 ); // In serious trouble if being asked for properties after moving the molecule...
             SharedVector ndip = DipoleInt::nuclear_contribution(molecule, origin);
             for (int i=0; i<3; i++) {
                 dipoledump = fopen(fname[i].c_str(), "w");
-                double **TMP1 = dipole[i]->to_block_matrix();
-                C_DGEMM('n','n',nso,nmo,nso,1,TMP1[0],nso,scf[0],nmo,0,TMP2[0],nso);
-                C_DGEMM('t','n',nmo,nmo,nso,1,scf[0],nmo,TMP2[0],nso,0,TMP1[0],nmo);
-                // TMP1 now holds the dipole integrals in the MO basis, ordered 1->nmo (in symmetry blocks).
-                // We just want to print out the active orbitals...
-                // Can't just loop over the two indices as we only know the
-                // active orbitals per irrep.  Instead, loop over everything
-                // and just print out non-zero integrals (bit slower as we
-                // don't use symmetry, but this isn't a hotspot...)
-                int ioff1 = 0;
-                int nfrz1 = 0;
-                for (int h1=0; h1<nirrep; ++h1) {
-                    nfrz1 += frzcpi[h1];
-                    int ioff2 = ioff1;
-                    int nfrz2 = nfrz1;
-                    for (int h2=h1; h2<nirrep; ++h2) {
-                        for (int m1=frzcpi[h1]; m1<frzcpi[h1]+active_mopi[h1]; ++m1) {
-                            int m2_init = h1 == h2 ? m1 : frzcpi[h2];
-                            for (int m2=m2_init; m2<frzcpi[h2]+active_mopi[h2]; ++m2) {
-                                int iorb1 = m1+ioff1;
-                                int iorb2 = m2+ioff2;
-                                double intgrl = TMP1[iorb1][iorb2];
-                                if (fabs(intgrl) > ints_tolerance) fprintf(dipoledump, "%29.20E%4d%4d\n", intgrl, mo_index(iorb1-nfrz1), mo_index(iorb2-nfrz2));
-                            }
-                        }
-                        nfrz2 += frzcpi[h2];
-                        ioff2 += dipole[i]->rowdim(h2);
-                    }
-                    ioff1 += dipole[i]->rowdim(h1);
-                }
-                // The contribution of the frozen core orbitals to a one-body
-                // expectation value is just \sum_i <i|O_1|i>.
-                double frz_contrib = 0.0;
-                ioff1 = 0;
-                for (int h=0; h<nirrep; ++h) {
-                    for (int m=0; m<frzcpi[h]; ++m) {
-                        int iorb = m+ioff1;
-                        frz_contrib += 2*TMP1[iorb][iorb]; // 2* for RHF.
-                    }
-                    ioff1 += dipole[i]->rowdim(h);
-                }
+                write_oei_prop_to_disk(dipoledump, wfn, dipole[i], ints_tolerance, mo_index, &frz_contrib);
                 fprintf(dipoledump, "%29.20E%4d%4d\n", ndip->get(i)+frz_contrib, 0, 0);
                 fclose(dipoledump);
             }

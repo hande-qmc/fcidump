@@ -292,6 +292,16 @@ fcidump(Options &options)
                 fprintf(dipoledump, "%29.20E%4d%4d\n", ndip->get(i)+frz_contrib, 0, 0);
                 fclose(dipoledump);
             }
+            // BONUS: and quadrupole moments.  (Just zz for now.)
+            std::vector<SharedMatrix> trquad = mints.so_traceless_quadrupole();
+            SharedVector nquad = QuadrupoleInt::nuclear_contribution(molecule, origin);
+            {
+                int ij = 5;
+                dipoledump = fopen("TRQUAD_ZZ", "w");
+                write_oei_prop_to_disk(dipoledump, wfn, trquad[ij], ints_tolerance, mo_index, &frz_contrib);
+                fprintf(dipoledump, "%29.20E%4d%4d\n", nquad->get(0,ij)+frz_contrib, 0, 0);
+                fclose(dipoledump);
+            }
         }
     }
     else {

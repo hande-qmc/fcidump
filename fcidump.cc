@@ -198,11 +198,11 @@ fcidump(Options &options)
     fprintf(outfile, "Generating FCIDUMP.\n");
     if (wfn->same_a_b_orbs()) {
         fprintf(outfile, "Found RHF\n");
+    } else {
+        fprintf(outfile, "Found UHF\n");
         restricted = false;
         // write out using spin orbitals rather than molecular orbitals.
         nbf *= 2;
-    } else {
-        fprintf(outfile, "Found UHF\n");
     }
 
     if (options.get_str("REFERENCE") == "ROHF")

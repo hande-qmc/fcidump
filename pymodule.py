@@ -1,14 +1,14 @@
-import PsiMod
+import psi4
 import re
 import os
-import input
+import inputparser
 import math
 import warnings
 from driver import *
 from wrappers import *
 from molutil import *
-from text import *
-from procutil import *
+import p4util
+from psiexceptions import *
 
 
 def run_fcidump(name, **kwargs):
@@ -19,14 +19,13 @@ def run_fcidump(name, **kwargs):
 
     """
     lowername = name.lower()
-    kwargs = kwargs_lower(kwargs)
+    kwargs = p4util.kwargs_lower(kwargs)
 
-    # Your plugin's PsiMod run sequence goes here
+    # Your plugin's psi4 run sequence goes here
     scf_helper(name, **kwargs)
-    returnvalue = PsiMod.plugin('fcidump.so')
+    returnvalue = psi4.plugin('fcidump.so')
 
     return returnvalue
-
 
 # Integration with driver routines
 procedures['energy']['fcidump'] = run_fcidump

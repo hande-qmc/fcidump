@@ -69,8 +69,8 @@ void write_oei_to_disk(FILE* intdump, SharedMatrix moH, double ints_tolerance, o
 void write_tei_to_disk(FILE* intdump, int nirrep, dpdbuf4& K, double ints_tolerance, orb_indx indx1, orb_indx indx2)
 {
     for(int h = 0; h < nirrep; ++h){
-        dpd_buf4_mat_irrep_init(&K, h);
-        dpd_buf4_mat_irrep_rd(&K, h);
+        global_dpd_->buf4_mat_irrep_init(&K, h);
+        global_dpd_->buf4_mat_irrep_rd(&K, h);
         for(int pq = 0; pq < K.params->rowtot[h]; ++pq){
             int p = K.params->roworb[h][pq][0];
             int q = K.params->roworb[h][pq][1];
@@ -83,7 +83,7 @@ void write_tei_to_disk(FILE* intdump, int nirrep, dpdbuf4& K, double ints_tolera
                             K.matrix[h][pq][rs], indx1(p), indx1(q), indx2(r), indx2(s));
             }
         }
-        dpd_buf4_mat_irrep_close(&K, h);
+        global_dpd_->buf4_mat_irrep_close(&K, h);
     }
 }
 
@@ -195,10 +195,14 @@ fcidump(Options &options)
     // ..and if we're doing bonus features
     bool dump_dipoles = options.get_bool("DIPOLE_INTEGRALS");
 
-    if (options.get_str("REFERENCE") == "UHF") {
+    fprintf(outfile, "Generating FCIDUMP.\n");
+    if (wfn->same_a_b_orbs()) {
+        fprintf(outfile, "Found RHF\n");
         restricted = false;
         // write out using spin orbitals rather than molecular orbitals.
         nbf *= 2;
+    } else {
+        fprintf(outfile, "Found UHF\n");
     }
 
     if (options.get_str("REFERENCE") == "ROHF")
@@ -241,8 +245,8 @@ fcidump(Options &options)
     // Use the IntegralTransform object's DPD instance, for convenience
     dpd_set_default(ints.get_dpd_id());
 
-    fprintf(outfile, "    Transformation complete.\n\n");
-    fprintf(outfile, "  Generating fort.55 integral file...");
+    fprintf(outfile, "    Transformation complete.\n");
+    fprintf(outfile, "  Generating fort.55 integral file..\n.");
 
     double ints_tolerance = options.get_double("INTS_TOLERANCE");
 
@@ -253,13 +257,13 @@ fcidump(Options &options)
     if (restricted) {
 
         // We want only the permutationally unique integrals, hence [A>=A]+, see libtrans documenation for details
-        dpd_buf4_init(&K, PSIF_LIBTRANS_DPD, 0,
+        global_dpd_->buf4_init(&K, PSIF_LIBTRANS_DPD, 0,
                       ints.DPD_ID("[A>=A]+"), ints.DPD_ID("[A>=A]+"), // In memory
                       ints.DPD_ID("[A>=A]+"), ints.DPD_ID("[A>=A]+"), // On disk
                       0,
                       "MO Ints (AA|AA)");
         write_tei_to_disk(intdump, nirrep, K, ints_tolerance, mo_index, mo_index);
-        dpd_buf4_close(&K);
+        global_dpd_->buf4_close(&K);
 
         // Load in frozen core operator, in the event of FREEZE_CORE = FALSE this is the MO OEI
         SharedMatrix moH(new Matrix(PSIF_MO_FZC, wfn->nmopi(), wfn->nmopi()));
@@ -309,31 +313,31 @@ fcidump(Options &options)
         // We want only the permutationally unique integrals, hence [A>=A]+, see libtrans documenation for details
 
         // Load up alpha alpha
-        dpd_buf4_init(&K, PSIF_LIBTRANS_DPD, 0,
+        global_dpd_->buf4_init(&K, PSIF_LIBTRANS_DPD, 0,
                       ints.DPD_ID("[A>=A]+"), ints.DPD_ID("[A>=A]+"), // In memory
                       ints.DPD_ID("[A>=A]+"), ints.DPD_ID("[A>=A]+"), // On disk
                       0,
                       "MO Ints (AA|AA)");
         write_tei_to_disk(intdump, nirrep, K, ints_tolerance, alpha_index, alpha_index);
-        dpd_buf4_close(&K);
+        global_dpd_->buf4_close(&K);
 
         // Load up beta beta
-        dpd_buf4_init(&K, PSIF_LIBTRANS_DPD, 0,
+        global_dpd_->buf4_init(&K, PSIF_LIBTRANS_DPD, 0,
                       ints.DPD_ID("[a>=a]+"), ints.DPD_ID("[a>=a]+"), // In memory
                       ints.DPD_ID("[a>=a]+"), ints.DPD_ID("[a>=a]+"), // On disk
                       0,
                       "MO Ints (aa|aa)");
         write_tei_to_disk(intdump, nirrep, K, ints_tolerance, beta_index, beta_index);
-        dpd_buf4_close(&K);
+        global_dpd_->buf4_close(&K);
 
         // Load up alpha beta
-        dpd_buf4_init(&K, PSIF_LIBTRANS_DPD, 0,
+        global_dpd_->buf4_init(&K, PSIF_LIBTRANS_DPD, 0,
                       ints.DPD_ID("[A>=A]+"), ints.DPD_ID("[a>=a]+"), // In memory
                       ints.DPD_ID("[A>=A]+"), ints.DPD_ID("[a>=a]+"), // On disk
                       0,
                       "MO Ints (AA|aa)");
         write_tei_to_disk(intdump, nirrep, K, ints_tolerance, alpha_index, beta_index);
-        dpd_buf4_close(&K);
+        global_dpd_->buf4_close(&K);
 
         // Load in alpha frozen core operator, in the event of FREEZE_CORE = FALSE this is the MO OEI
         SharedMatrix moH(new Matrix(PSIF_MO_A_FZC, wfn->nmopi(), wfn->nmopi()));
@@ -360,7 +364,7 @@ fcidump(Options &options)
     _default_psio_lib_->close(PSIF_LIBTRANS_DPD, 1);
 
     fclose(intdump);
-    fprintf(outfile, "Done generating FCIDUMP.");
+    fprintf(outfile, "Done generating FCIDUMP.\n");
 
     return Success;
 }

@@ -3,11 +3,12 @@
 #
 # You shouldn't need to modify anything in this file.
 #
+# JSS: we assume this is in the plugins subdirectory.
 
 # Location of your PSI4 source
-top_srcdir = $(HOME)/projects/psi4
+top_srcdir = ${CURDIR}/../../
 # Location of your PSI4 install, by default as listed
-top_objdir = $(HOME)/projects/psi4/obj
+top_objdir = $(top_srcdir)/obj
 
 # Start by figuring out whether we're on Linux or Mac (sorry, Mr. Gates)
 UNAME := $(shell uname)
@@ -16,11 +17,12 @@ include $(top_objdir)/src/bin/MakeVars
 
 # Reset these values, MakeVars changes them to valud only valid in Psi4's objdir
 # Location of your PSI4 source
-top_srcdir = $(HOME)/projects/psi4
+top_srcdir = ${CURDIR}/../../
 # Location of your PSI4 install, by default as listed
-top_objdir = $(HOME)/projects/psi4/obj
+top_objdir = $(top_srcdir)/obj
+$(info 'dirs' $(top_srcdir) $(top_objdir))
 
-PSITARGET = $(shell basename `pwd`).so
+PSITARGET = fcidump.so
 PSILIBS = -L$(top_objdir)/lib -lPSI_plugin
 
 CXXSRC = $(notdir $(wildcard *.cc))
@@ -29,6 +31,7 @@ DEPENDINCLUDE = $(notdir $(wildcard *.h))
 BINOBJ = $(CXXSRC:%.cc=%.o)
 
 default:: $(PSITARGET)
+
 
 # Add the flags needed for shared library creation
 ifeq ($(UNAME), Linux)

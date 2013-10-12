@@ -20,7 +20,6 @@ include $(top_objdir)/src/bin/MakeVars
 top_srcdir = ${CURDIR}/../../
 # Location of your PSI4 install, by default as listed
 top_objdir = $(top_srcdir)/obj
-$(info 'dirs' $(top_srcdir) $(top_objdir))
 
 PSITARGET = fcidump.so
 PSILIBS = -L$(top_objdir)/lib -lPSI_plugin

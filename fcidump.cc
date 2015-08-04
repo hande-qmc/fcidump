@@ -195,11 +195,11 @@ fcidump(Options &options)
     // ..and if we're doing bonus features
     bool dump_dipoles = options.get_bool("DIPOLE_INTEGRALS");
 
-    fprintf(outfile, "Generating FCIDUMP.\n");
+    outfile->Printf("Generating FCIDUMP.\n");
     if (wfn->same_a_b_orbs()) {
-        fprintf(outfile, "Found RHF\n");
+        outfile->Printf("Found RHF\n");
     } else {
-        fprintf(outfile, "Found UHF\n");
+        outfile->Printf("Found UHF\n");
         restricted = false;
         // write out using spin orbitals rather than molecular orbitals.
         nbf *= 2;
@@ -245,8 +245,8 @@ fcidump(Options &options)
     // Use the IntegralTransform object's DPD instance, for convenience
     dpd_set_default(ints.get_dpd_id());
 
-    fprintf(outfile, "    Transformation complete.\n");
-    fprintf(outfile, "  Generating fort.55 integral file..\n.");
+    outfile->Printf("    Transformation complete.\n");
+    outfile->Printf("  Generating fort.55 integral file..\n.");
 
     double ints_tolerance = options.get_double("INTS_TOLERANCE");
 
@@ -364,7 +364,7 @@ fcidump(Options &options)
     _default_psio_lib_->close(PSIF_LIBTRANS_DPD, 1);
 
     fclose(intdump);
-    fprintf(outfile, "Done generating FCIDUMP.\n");
+    outfile->Printf("Done generating FCIDUMP.\n");
 
     return Success;
 }

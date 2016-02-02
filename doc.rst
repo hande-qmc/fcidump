@@ -57,15 +57,16 @@ For example, the input file:
 
     set {
         basis 6-311g
-        scf_type out_of_core
-        freeze_core small
-        num_frozen_uocc 4
+        scf_type pk
     }
 
     energy('fcidump')
 
 will run the requested SCF calculation and then write out an FCIDUMP file to the file
 `INTDUMP`.
+
+NOTE: if psi4 is run in the same directory as the plugin, PYTHONPATH must be used instead
+of PSIPATH.
 
 Basic keywords
 --------------

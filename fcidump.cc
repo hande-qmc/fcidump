@@ -40,7 +40,6 @@
 #include <libmints/vector.h>
 #include <libmints/vector3.h>
 #include <libmints/wavefunction.h>
-#include <libchkpt/chkpt.h>
 
 #include <vector>
 
@@ -191,11 +190,9 @@ read_options(std::string name, Options &options)
 }
 
 
-extern "C" PsiReturnType
-fcidump(Options &options)
+extern "C" SharedWavefunction
+fcidump(SharedWavefunction wfn, Options &options)
 {
-    // We need the reference (SCF) wavefunction
-    boost::shared_ptr<Wavefunction> wfn     = Process::environment.wavefunction();
     if(!wfn) throw PSIEXCEPTION("SCF has not been run yet!");
     boost::shared_ptr<Molecule>     molecule = wfn->molecule();
    
@@ -308,7 +305,7 @@ fcidump(Options &options)
             // works, for now follow preppert.cc (part of ccresponse) and do
             // the transformation ourselves.
             std::string fname[] = {"DIPOLES_X", "DIPOLES_Y", "DIPOLES_Z"};
-            MintsHelper mints;
+            MintsHelper mints(wfn->basisset(), Process::environment.options, 0);
             std::vector<SharedMatrix> dipole = mints.so_dipole();
             FILE *dipoledump;
             double frz_contrib;
@@ -390,7 +387,7 @@ fcidump(Options &options)
     fclose(intdump);
     outfile->Printf("Done generating FCIDUMP.\n");
 
-    return Success;
+    return wfn;
 }
 
 }} // End Namespaces

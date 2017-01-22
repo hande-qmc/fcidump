@@ -14,7 +14,7 @@ necessary settings must first be produced.  In this directory, run:
 
 ::
 
-    $ psi4 --new-plugin-makefile
+    $ `psi4 --plugin-compile`
     $ make
 
 Running

@@ -22,33 +22,33 @@
  *@END LICENSE
  */
 
-#include <libplugin/plugin.h>
 
-#include <psi4-dec.h>
-#include <libparallel/parallel.h>
-#include <liboptions/liboptions.h>
-#include <libmints/mints.h>
-#include <libmints/view.h>
-#include <libpsio/psio.hpp>
-#include <libqt/qt.h>
-#include <libiwl/iwl.hpp>
-#include <libtrans/integraltransform.h>
-#include <libtrans/mospace.h>
-#include <libdpd/dpd.h>
-#include <libciomr/libciomr.h>
-#include <libfock/apps.h>
-#include <libmints/vector.h>
-#include <libmints/vector3.h>
-#include <libmints/wavefunction.h>
+#include "psi4/psi4-dec.h"
+#include "psi4/libparallel/parallel.h"
+#include "psi4/liboptions/liboptions.h"
+#include "psi4/libmints/mintshelper.h"
+#include "psi4/libmints/view.h"
+#include "psi4/libpsio/psio.hpp"
+#include "psi4/libqt/qt.h"
+#include "psi4/libiwl/iwl.hpp"
+#include "psi4/libtrans/integraltransform.h"
+#include "psi4/libtrans/mospace.h"
+#include "psi4/libdpd/dpd.h"
+#include "psi4/libciomr/libciomr.h"
+#include "psi4/libmints/vector.h"
+#include "psi4/libmints/vector3.h"
+#include "psi4/libmints/matrix.h"
+#include "psi4/libmints/wavefunction.h"
+#include "psi4/libmints/molecule.h"
+#include "psi4/libmints/dipole.h"
+#include "psi4/libmints/quadrupole.h"
 
 #include <vector>
 
-#include "psifiles.h"
+#include "psi4/psifiles.h"
 
 // This allows us to be lazy in getting the spaces in DPD calls
 #define ID(x) ints.DPD_ID(x)
-
-INIT_PLUGIN
 
 // Shamelessly borrow from mrcc.cc.
 
@@ -110,7 +110,7 @@ void write_tei_to_disk(FILE* intdump, int nirrep, dpdbuf4& K, double ints_tolera
     }
 }
 
-void write_eigv_to_disk(FILE* intdump, Dimension frzcpi, Dimension active_mopi, const boost::shared_ptr<Vector> eigv, orb_indx indx)
+void write_eigv_to_disk(FILE* intdump, Dimension frzcpi, Dimension active_mopi, const std::shared_ptr<Vector> eigv, orb_indx indx)
 {
     int iorb = 0;
     for (int h=0; h<active_mopi.n(); ++h) {
@@ -122,7 +122,7 @@ void write_eigv_to_disk(FILE* intdump, Dimension frzcpi, Dimension active_mopi, 
     }
 }
 
-void write_oei_prop_to_disk(FILE* intdump, boost::shared_ptr<Wavefunction> wfn, SharedMatrix prop_ints, double ints_tolerance, orb_indx indx, double *frz_contrib) {
+void write_oei_prop_to_disk(FILE* intdump, std::shared_ptr<Wavefunction> wfn, SharedMatrix prop_ints, double ints_tolerance, orb_indx indx, double *frz_contrib) {
 
     double** scf = wfn->Ca()->to_block_matrix(); // TODO: UHF
     int nso = wfn->nso();
@@ -194,10 +194,10 @@ extern "C" SharedWavefunction
 fcidump(SharedWavefunction wfn, Options &options)
 {
     if(!wfn) throw PSIEXCEPTION("SCF has not been run yet!");
-    boost::shared_ptr<Molecule>     molecule = wfn->molecule();
+    std::shared_ptr<Molecule>     molecule = wfn->molecule();
    
     // Grab the global (default) PSIO object, for file I/O
-    boost::shared_ptr<PSIO> psio(_default_psio_lib_);
+    std::shared_ptr<PSIO> psio(_default_psio_lib_);
 
     // Orbitals spaces
     Dimension docc        = wfn->doccpi();
@@ -254,7 +254,7 @@ fcidump(SharedWavefunction wfn, Options &options)
     fprintf(intdump, "\n&END\n");
 
     // Define the orbital space of the MO integrals we need.
-    std::vector<boost::shared_ptr<MOSpace> > spaces;
+    std::vector<std::shared_ptr<MOSpace> > spaces;
     spaces.push_back(MOSpace::all);
 
     // Create integral transformation object

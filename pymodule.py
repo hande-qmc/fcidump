@@ -23,15 +23,8 @@
 #
 
 import psi4
-import re
-import os
-import inputparser
-import math
-import warnings
-import driver
-from molutil import *
-import p4util
-from p4util.exceptions import *
+import psi4.driver.p4util as p4util
+from psi4.driver.procedures import proc_util
 
 
 def run_fcidump(name, **kwargs):
@@ -47,12 +40,13 @@ def run_fcidump(name, **kwargs):
     # Your plugin's psi4 run sequence goes here
     ref_wfn = kwargs.get('ref_wfn', None)
     if ref_wfn is None:
-        ref_wfn = driver.scf_helper(name, **kwargs)
+        ref_wfn = psi4.driver.scf_helper(name, **kwargs)
 
-    test_wfn = psi4.plugin('fcidump.so', ref_wfn)
+    proc_util.check_iwl_file_from_scf_type(psi4.core.get_option('SCF', 'SCF_TYPE'), ref_wfn)
+    test_wfn = psi4.core.plugin('fcidump.so', ref_wfn)
 
     return test_wfn
 
 
 # Integration with driver routines
-driver.procedures['energy']['fcidump'] = run_fcidump
+psi4.driver.procedures['energy']['fcidump'] = run_fcidump

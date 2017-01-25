@@ -1,9 +1,14 @@
 #
-#@BEGIN LICENSE
+# @BEGIN LICENSE
 #
 # fcidump by HANDE developers, a plugin to:
 #
-# PSI4: an ab initio quantum chemistry software package
+# Psi4: an open-source quantum chemistry software package
+#
+# Copyright (c) 2007-2017 The Psi4 Developers.
+#
+# The copyrights for code used from other parties are included in
+# the corresponding files.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,27 +24,13 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-#@END LICENSE
+# @END LICENSE
 #
 
-"""Plugin docstring.
-"""
-__version__ = '0.1'
-__author__  = 'HANDE Developers'
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 
-# Load Python modules
-# Something weird with boost_python, but the explicit import doesn't work on
-# python 2 (at least, not on CMTH machines) whereas the relative import doesn't
-# work on python 3 (i.e. my laptop).
-try:
-    from fcidump.pymodule import *
-except ImportError:
-    from pymodule import *
+project(fcidump CXX)
 
-# Load C++ plugin
-import os
-import psi4
-plugdir = os.path.split(os.path.abspath(__file__))[0]
-sofile = plugdir + '/' + os.path.split(plugdir)[1] + '.so'
-psi4.core.plugin_load(sofile)
+find_package(psi4 1.0 REQUIRED)
 
+add_psi4_plugin(fcidump fcidump.cc)

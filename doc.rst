@@ -3,8 +3,8 @@ fcidump: PSI4 plugin to produce FCIDUMP files
 
 It is sometimes convenient to have a quick interface between |PSIfour| and another code.
 One such (albeit inefficient) way is to write out all one- and two-electron integrals to
-disk.  A format (sadly modified in an ad hoc fashion by other codes) for the filetype
-FCIDUMP is given in Comp. Phys. Commun. 54 75 (1989).
+disk.  A format (sadly modified in an ad hoc fashion by other codes, including this one!)
+for the filetype FCIDUMP is given in Comp. Phys. Commun. 54 75 (1989).
 
 Compilation
 -----------

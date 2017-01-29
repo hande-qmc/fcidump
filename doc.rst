@@ -79,6 +79,7 @@ The following options can be set either globally or scoped to the ``fcidump`` mo
 including
 
 ::
+
     set fcidump keyword value
 
 in your input file.

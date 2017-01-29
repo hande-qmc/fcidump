@@ -73,7 +73,13 @@ of PSIPATH.
 Basic keywords
 --------------
 
-The following options can be set either globally or scoped to the ``fcidump`` module.
+The following options can be set either globally or scoped to the ``fcidump`` module by
+including
+
+::
+    set fcidump keyword value
+
+in your input file.
 
 integrals_file
     Filename to which the integrals are written.  Default: ``INTDUMP``.

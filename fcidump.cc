@@ -184,6 +184,8 @@ read_options(std::string name, Options &options)
         options.add_str("INTEGRALS_FILE", "INTDUMP");
         /*- Also write out dipole integrals? -*/
         options.add_bool("DIPOLE_INTEGRALS", false);
+        /*- Print out single-particle eigenvalues? -*/
+        options.add_bool("PRINT_EIGENVALUES", true);
     }
 
     return true;
@@ -294,7 +296,8 @@ fcidump(SharedWavefunction wfn, Options &options)
         write_oei_to_disk(intdump, moH, ints_tolerance, mo_index);
 
         // Print out single-particle eigenvalues.
-        write_eigv_to_disk(intdump, frzcpi, active_mopi, wfn->epsilon_a(), mo_index);
+        if (options.get_bool("PRINT_EIGENVALUES"))
+            write_eigv_to_disk(intdump, frzcpi, active_mopi, wfn->epsilon_a(), mo_index);
 
         // Print nuclear repulsion energy + frozen core energy.
         fprintf(intdump, "%28.20E%4d%4d%4d%4d\n", ints.get_frozen_core_energy() + molecule->nuclear_repulsion_energy(), 0, 0, 0, 0);
@@ -374,10 +377,12 @@ fcidump(SharedWavefunction wfn, Options &options)
         moHb = vmoHb();
         write_oei_to_disk(intdump, moHb, ints_tolerance, beta_index);
 
-        // Print out alpha single-particle eigenvalues.
-        write_eigv_to_disk(intdump, frzcpi, active_mopi, wfn->epsilon_a(), alpha_index);
-        // Print out beta single-particle eigenvalues.
-        write_eigv_to_disk(intdump, frzcpi, active_mopi, wfn->epsilon_b(), beta_index);
+        if (options.get_bool("PRINT_EIGENVALUES")) {
+            // Print out alpha single-particle eigenvalues.
+            write_eigv_to_disk(intdump, frzcpi, active_mopi, wfn->epsilon_a(), alpha_index);
+            // Print out beta single-particle eigenvalues.
+            write_eigv_to_disk(intdump, frzcpi, active_mopi, wfn->epsilon_b(), beta_index);
+        }
 
         // Print nuclear repulsion energy + frozen core energy.
         fprintf(intdump, "%28.20E%4d%4d%4d%4d\n", ints.get_frozen_core_energy() + molecule->nuclear_repulsion_energy(), 0, 0, 0, 0);

@@ -70,6 +70,8 @@ will run the requested SCF calculation and then write out an FCIDUMP file to the
 NOTE: if psi4 is run in the same directory as the plugin, PYTHONPATH must be used instead
 of PSIPATH.
 
+The above example can be found in the ``test`` subdirectory.
+
 Basic keywords
 --------------
 

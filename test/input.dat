@@ -1,0 +1,22 @@
+# Assume run from the directory containing this file and set search path to include the
+# directory containing the fcidump plugin directory.
+sys.path.insert(0, '../../')
+import fcidump
+
+molecule {
+   Ne  0  0  0
+}
+
+set {
+    basis 6-311g
+    scf_type pk
+}
+
+set fcidump {
+    # Set to false to disable printing of single-particle eigenvalues to integrals file.
+    print_eigenvalues true
+    # Set filename (default: INTDUMP)
+    integrals_file Ne.6311g.INTDUMP
+}
+
+energy('fcidump')

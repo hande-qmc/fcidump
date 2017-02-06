@@ -1,0 +1,36 @@
+language: python
+python:
+    - 2.7
+    - 3.4
+
+addons:
+    apt:
+        packages:
+            - gcc
+            - g++
+
+before_install:
+  # Use miniconda and conda packages to speed up dependency setup (principally 
+  # borrowed from https://gist.github.com/dan-blanchard/7045057
+  # and https://github.com/Jorge-C/ordination/blob/master/.travis.yml
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+        wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+        MC=$HOME/miniconda2;
+    else
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+        MC=$HOME/miniconda3;
+    fi
+  - bash ./miniconda.sh -b
+  - export PATH=$MC/bin:$PATH
+  - hash -r
+  # Update conda itself
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update --yes conda
+
+install:
+  - conda create --yes -n p4env -c https://conda.anaconda.org/psi4/label/test python=$TRAVIS_PYTHON_VERSION psi4
+  - source activate p4env
+  - psi4 --help
+
+script:
+  - echo "done"

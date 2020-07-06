@@ -1,3 +1,5 @@
+**This plugin is DEPRECATED and UNMAINTAINED. `Psi4 <http://psicode.org/psi4manual/master/api/psi4.driver.fcidump.html>`_ can, as of version 1.2, natively write integrals to FCIDUMP format.**
+
 fcidump: PSI4 plugin to produce FCIDUMP files
 =============================================
 
